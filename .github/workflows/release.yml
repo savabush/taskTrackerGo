@@ -25,18 +25,31 @@ jobs:
       - name: Run tests
         run: go test -v ./...
 
+      - name: Locate main package
+        id: locate-main
+        run: |
+          MAIN_DIR=$(find . -name "main.go" -type f -exec dirname {} \; | head -n 1)
+          if [ -z "$MAIN_DIR" ]; then
+            echo "Error: Could not find main.go in the repository"
+            exit 1
+          fi
+          echo "MAIN_DIR=$MAIN_DIR" >> $GITHUB_ENV
+          echo "Found main package at: $MAIN_DIR"
+
       - name: Build for multiple platforms
         run: |
+          echo "Building from directory: $MAIN_DIR"
+          
           # Build for Windows
-          GOOS=windows GOARCH=amd64 go build -o task-tracker-windows-amd64.exe ./cmd/task-tracker
+          GOOS=windows GOARCH=amd64 go build -o task-tracker-windows-amd64.exe $MAIN_DIR
           
           # Build for macOS
-          GOOS=darwin GOARCH=amd64 go build -o task-tracker-darwin-amd64 ./cmd/task-tracker
-          GOOS=darwin GOARCH=arm64 go build -o task-tracker-darwin-arm64 ./cmd/task-tracker
+          GOOS=darwin GOARCH=amd64 go build -o task-tracker-darwin-amd64 $MAIN_DIR
+          GOOS=darwin GOARCH=arm64 go build -o task-tracker-darwin-arm64 $MAIN_DIR
           
           # Build for Linux
-          GOOS=linux GOARCH=amd64 go build -o task-tracker-linux-amd64 ./cmd/task-tracker
-          GOOS=linux GOARCH=arm64 go build -o task-tracker-linux-arm64 ./cmd/task-tracker
+          GOOS=linux GOARCH=amd64 go build -o task-tracker-linux-amd64 $MAIN_DIR
+          GOOS=linux GOARCH=arm64 go build -o task-tracker-linux-arm64 $MAIN_DIR
 
       - name: Archive binaries
         run: |

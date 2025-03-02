@@ -25,6 +25,7 @@ We use GitHub Actions to automate the build and release process. The workflow is
    ```
 4. The GitHub Actions workflow will automatically:
    - Run tests
+   - Locate the main.go file in your repository
    - Build binaries for multiple platforms (Windows, macOS, Linux)
    - Create a GitHub release
    - Upload the binaries as release assets
@@ -42,38 +43,48 @@ For Windows users, we provide a PowerShell script to help with the release proce
 This script will:
 1. Update the VERSION file
 2. Update the release date in CHANGELOG.md
-3. Show you the git commands to run for tagging and pushing
+3. Check your repository for main.go file locations
+4. Show you the git commands to run for tagging and pushing
 
 ### The Release Workflow
 
 The workflow defined in `.github/workflows/release.yml`:
 
-1. Builds the application for multiple platforms:
+1. Automatically finds your main.go file in the repository structure
+2. Builds the application for multiple platforms:
    - Windows (amd64)
    - macOS (amd64, arm64)
    - Linux (amd64, arm64)
-2. Archives the binaries with the README.md file
-3. Creates a GitHub release with automatic release notes
+3. Archives the binaries with the README.md file
+4. Creates a GitHub release with automatic release notes
+
+> **Note:** The workflow will dynamically locate your application's main.go file. Ensure you have a main.go file in your repository that builds successfully.
 
 ## Manual Release Process
 
 If you prefer to create releases manually:
 
-1. Build the binaries locally:
+1. Locate your main.go file directory:
+   ```
+   # Get the directory containing main.go
+   MAIN_DIR=$(find . -name "main.go" -type f -exec dirname {} \; | head -n 1)
+   ```
+
+2. Build the binaries locally:
    ```
    # Windows
-   GOOS=windows GOARCH=amd64 go build -o task-tracker-windows-amd64.exe ./cmd/task-tracker
+   GOOS=windows GOARCH=amd64 go build -o task-tracker-windows-amd64.exe $MAIN_DIR
 
    # macOS
-   GOOS=darwin GOARCH=amd64 go build -o task-tracker-darwin-amd64 ./cmd/task-tracker
-   GOOS=darwin GOARCH=arm64 go build -o task-tracker-darwin-arm64 ./cmd/task-tracker
+   GOOS=darwin GOARCH=amd64 go build -o task-tracker-darwin-amd64 $MAIN_DIR
+   GOOS=darwin GOARCH=arm64 go build -o task-tracker-darwin-arm64 $MAIN_DIR
 
    # Linux
-   GOOS=linux GOARCH=amd64 go build -o task-tracker-linux-amd64 ./cmd/task-tracker
-   GOOS=linux GOARCH=arm64 go build -o task-tracker-linux-arm64 ./cmd/task-tracker
+   GOOS=linux GOARCH=amd64 go build -o task-tracker-linux-amd64 $MAIN_DIR
+   GOOS=linux GOARCH=arm64 go build -o task-tracker-linux-arm64 $MAIN_DIR
    ```
 
-2. Archive the binaries:
+3. Archive the binaries:
    ```
    # Windows
    zip -j task-tracker-windows-amd64.zip task-tracker-windows-amd64.exe README.md
@@ -85,7 +96,7 @@ If you prefer to create releases manually:
    tar czf task-tracker-linux-arm64.tar.gz task-tracker-linux-arm64 README.md
    ```
 
-3. Create a new release on GitHub:
+4. Create a new release on GitHub:
    - Go to your repository on GitHub
    - Click on "Releases"
    - Click "Draft a new release"
@@ -101,8 +112,9 @@ Before creating a release, ensure:
 - [ ] All tests pass
 - [ ] Documentation is up-to-date
 - [ ] CHANGELOG.md is updated (if you maintain one)
-- [ ] Version numbers are updated in relevant files
+- [ ] VERSION file contains the correct version
 - [ ] The code is stable and ready for release
+- [ ] Your repository contains a main.go file that can be built
 
 ## Hotfixes
 
