@@ -28,15 +28,15 @@ jobs:
       - name: Build for multiple platforms
         run: |
           # Build for Windows
-          GOOS=windows GOARCH=amd64 go build -o task-tracker-windows-amd64.exe
+          GOOS=windows GOARCH=amd64 go build -o task-tracker-windows-amd64.exe ./cmd/task-tracker
           
           # Build for macOS
-          GOOS=darwin GOARCH=amd64 go build -o task-tracker-darwin-amd64
-          GOOS=darwin GOARCH=arm64 go build -o task-tracker-darwin-arm64
+          GOOS=darwin GOARCH=amd64 go build -o task-tracker-darwin-amd64 ./cmd/task-tracker
+          GOOS=darwin GOARCH=arm64 go build -o task-tracker-darwin-arm64 ./cmd/task-tracker
           
           # Build for Linux
-          GOOS=linux GOARCH=amd64 go build -o task-tracker-linux-amd64
-          GOOS=linux GOARCH=arm64 go build -o task-tracker-linux-arm64
+          GOOS=linux GOARCH=amd64 go build -o task-tracker-linux-amd64 ./cmd/task-tracker
+          GOOS=linux GOARCH=arm64 go build -o task-tracker-linux-arm64 ./cmd/task-tracker
 
       - name: Archive binaries
         run: |

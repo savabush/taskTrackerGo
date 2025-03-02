@@ -31,6 +31,19 @@ We use GitHub Actions to automate the build and release process. The workflow is
 
 5. Once the workflow completes, navigate to the "Releases" section of your GitHub repository to see the new release
 
+### Using the Release Helper Script
+
+For Windows users, we provide a PowerShell script to help with the release process:
+
+```
+.\scripts\release.ps1 -Version 1.0.0
+```
+
+This script will:
+1. Update the VERSION file
+2. Update the release date in CHANGELOG.md
+3. Show you the git commands to run for tagging and pushing
+
 ### The Release Workflow
 
 The workflow defined in `.github/workflows/release.yml`:
@@ -49,15 +62,15 @@ If you prefer to create releases manually:
 1. Build the binaries locally:
    ```
    # Windows
-   GOOS=windows GOARCH=amd64 go build -o task-tracker-windows-amd64.exe
+   GOOS=windows GOARCH=amd64 go build -o task-tracker-windows-amd64.exe ./cmd/task-tracker
 
    # macOS
-   GOOS=darwin GOARCH=amd64 go build -o task-tracker-darwin-amd64
-   GOOS=darwin GOARCH=arm64 go build -o task-tracker-darwin-arm64
+   GOOS=darwin GOARCH=amd64 go build -o task-tracker-darwin-amd64 ./cmd/task-tracker
+   GOOS=darwin GOARCH=arm64 go build -o task-tracker-darwin-arm64 ./cmd/task-tracker
 
    # Linux
-   GOOS=linux GOARCH=amd64 go build -o task-tracker-linux-amd64
-   GOOS=linux GOARCH=arm64 go build -o task-tracker-linux-arm64
+   GOOS=linux GOARCH=amd64 go build -o task-tracker-linux-amd64 ./cmd/task-tracker
+   GOOS=linux GOARCH=arm64 go build -o task-tracker-linux-arm64 ./cmd/task-tracker
    ```
 
 2. Archive the binaries:
