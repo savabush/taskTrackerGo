@@ -1,0 +1,58 @@
+name: Release Go Application
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: Build for multiple platforms
+        run: |
+          # Build for Windows
+          GOOS=windows GOARCH=amd64 go build -o task-tracker-windows-amd64.exe
+          
+          # Build for macOS
+          GOOS=darwin GOARCH=amd64 go build -o task-tracker-darwin-amd64
+          GOOS=darwin GOARCH=arm64 go build -o task-tracker-darwin-arm64
+          
+          # Build for Linux
+          GOOS=linux GOARCH=amd64 go build -o task-tracker-linux-amd64
+          GOOS=linux GOARCH=arm64 go build -o task-tracker-linux-arm64
+
+      - name: Archive binaries
+        run: |
+          zip -j task-tracker-windows-amd64.zip task-tracker-windows-amd64.exe README.md
+          tar czf task-tracker-darwin-amd64.tar.gz task-tracker-darwin-amd64 README.md
+          tar czf task-tracker-darwin-arm64.tar.gz task-tracker-darwin-arm64 README.md
+          tar czf task-tracker-linux-amd64.tar.gz task-tracker-linux-amd64 README.md
+          tar czf task-tracker-linux-arm64.tar.gz task-tracker-linux-arm64 README.md
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            task-tracker-windows-amd64.zip
+            task-tracker-darwin-amd64.tar.gz
+            task-tracker-darwin-arm64.tar.gz
+            task-tracker-linux-amd64.tar.gz
+            task-tracker-linux-arm64.tar.gz
+          generate_release_notes: true 
