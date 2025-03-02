@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"strings"
+	"sync"
 
 	"github.com/savabush/taskTracker/internal/services"
 	"github.com/spf13/cobra"
@@ -27,9 +28,18 @@ var AddCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		taskService := services.NewTaskService()
+
+		wg := sync.WaitGroup{}
+		wg.Add(len(args))
+
 		for _, arg := range args {
-			taskService.AddTask(arg)
+			go func(arg string) {
+				defer wg.Done()
+				taskService.AddTask(arg)
+			}(arg)
 		}
+		wg.Wait()
+
 		taskService.SaveTasks()
 		slog.Info("Added tasks", "count", len(args))
 	},

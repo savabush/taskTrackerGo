@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -53,6 +54,7 @@ type Task struct {
 
 type TaskService struct {
 	Tasks map[string]Task `json:"tasks"`
+	mu    sync.RWMutex
 }
 
 func NewTaskService() *TaskService {
@@ -64,6 +66,8 @@ func NewTaskService() *TaskService {
 }
 
 func (s *TaskService) AddTask(title string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	task := Task{
 		ID:        uuid.New().String(),
 		Title:     title,
@@ -76,6 +80,8 @@ func (s *TaskService) AddTask(title string) error {
 }
 
 func (s *TaskService) GetTasks(filter TaskStatus) map[string]Task {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	filteredTasks := make(map[string]Task)
 	switch filter {
 	case TaskStatusPending:
@@ -105,6 +111,8 @@ func (s *TaskService) GetTasks(filter TaskStatus) map[string]Task {
 }
 
 func (s *TaskService) GetTask(title string) (Task, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	task, ok := s.Tasks[title]
 	if !ok {
 		return Task{}, errors.New("task not found")
@@ -113,6 +121,8 @@ func (s *TaskService) GetTask(title string) (Task, error) {
 }
 
 func (s *TaskService) DeleteTask(title string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	_, ok := s.Tasks[title]
 	if !ok {
 		return errors.New("task not found")
@@ -122,6 +132,8 @@ func (s *TaskService) DeleteTask(title string) error {
 }
 
 func (s *TaskService) SaveTasks() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	slog.Debug("Saving tasks to file", "filename", tasksFileName, "count", len(s.Tasks))
 	type TasksWrapper struct {
 		Tasks map[string]Task `json:"tasks"`
@@ -141,6 +153,8 @@ func (s *TaskService) SaveTasks() error {
 }
 
 func (s *TaskService) LoadTasks() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	slog.Debug("Loading tasks from file", "filename", tasksFileName)
 	jsonData, err := os.ReadFile(tasksFileName)
 	if err != nil {
@@ -189,6 +203,8 @@ func (s *TaskService) LoadTasks() error {
 }
 
 func (s *TaskService) CompleteTask(title string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	task, ok := s.Tasks[title]
 	if !ok {
 		return errors.New("task not found")
@@ -200,6 +216,8 @@ func (s *TaskService) CompleteTask(title string) error {
 }
 
 func (s *TaskService) InProgressTask(title string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	task, ok := s.Tasks[title]
 	if !ok {
 		return errors.New("task not found")

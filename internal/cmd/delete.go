@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"strings"
+	"sync"
 
 	"github.com/savabush/taskTracker/internal/services"
 	"github.com/spf13/cobra"
@@ -27,9 +28,17 @@ var DeleteCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		taskService := services.NewTaskService()
+
+		wg := sync.WaitGroup{}
+		wg.Add(len(args))
+
 		for _, arg := range args {
-			taskService.DeleteTask(arg)
+			go func(arg string) {
+				defer wg.Done()
+				taskService.DeleteTask(arg)
+			}(arg)
 		}
+		wg.Wait()
 		taskService.SaveTasks()
 		slog.Info("Deleted tasks", "count", len(args))
 	},
